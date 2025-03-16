@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>분식 레시피북!</title>
+  <style>
+    @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
+
+    * {
+      font-family: Pretendard;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #fff6ee;
+    }
+
+    /* 🔸 네비게이션 헤더 */
+    .main-header {
+      position: fixed;
+      background-color: #fff0e3;
+      top: 0px; /* marquee 높이만큼 내리기 */
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px;
+      border-bottom: 2px solid #f15a24;
+      z-index: 900;
+  }
+  
+  body {
+    padding-top: 40px; /* 네비게이션 높이만큼 추가 */
+  }
+
+  .roulette-btn, .about-btn {
+      font-size: 1.05em;
+      font-weight: 600;
+      color: #f15a24;
+      text-decoration: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding-left: 8px;
+      padding-right: 8px;
+      padding-top: 2px;
+  }
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+      position: relative;
+      width: 50%;
+      margin: 30px auto;
+      border: 2px solid #f15a24;
+      border-radius: 30px;
+      padding: 5px 15px;
+      background-color: white;
+    }
+
+    .search-bar input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      padding: 10px;
+    }
+
+    .search-icon {
+      position: absolute;
+      right: 15px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .grid-container {
+      max-width: 1000px; /* 그리드의 최대 너비 설정 */
+      height: 650px; /* 전체 높이 설정 */
+      margin: 0 auto; /* 중앙 정렬 */
+      padding: 0px 20px; /* 위와 양쪽에 여백 추가 */
+  }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px; /*아이템 사이의 간격*/
+      
+    }
+
+    .grid-item {
+      /*background-color: #4a4a4a;*/
+      overflow: hidden;
+      
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .grid-item:hover {
+      transform: scale(1.05);
+    }
+
+    .grid-item img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .grid-item .title {
+      color: #f15a24;
+      padding: 0;
+      margin-top: 10px;
+      text-align: left;
+      font-weight: 400;
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 33%;
+      height: 100%;
+      background: #fff6ee;
+      box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+      overflow-y: auto;
+      transition: right 0.3s ease;
+      z-index: 1000;
+    }
+
+    .modal.open {
+      right: 0;
+    }
+
+    .modal-header {
+      padding-left: 20px;
+      padding-top: 15px;
+      padding-bottom: 15px;
+      font-size: 1.1em;
+      font-weight: 600;
+      background: #fff0e3;
+      border-bottom: 1.5px solid #f15a24; /* 주황색 밑줄 추가 */
+      color: #f15a24;
+    }
+    
+    /* 모달이 열릴 때 배경 스크롤 방지 */
+    body.modal-open {
+    overflow: hidden;
+    }
+
+    .modal-content {
+      padding: 20px;
+      color: #f15a24;
+      font-size: 16px; /* 글자 크기 */
+      line-height: 1.6; /* 행간 (가독성 증가) */
+      text-align: left; /* 텍스트 정렬 */
+
+    }
+
+    .modal-content h2 {
+      font-size: 1.2em; /* 글자 크기 */
+      font-weight: 500; /* 글자 굵기 */
+      text-align: left; /* 중앙 정렬 */
+      color: #f15a24; /* 주황색 */
+      margin-bottom: 15px; /* 아래 여백 추가 */
+    }
+    
+
+    .modal-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 1.5em;
+      cursor: pointer;
+      color: #f15a24;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      display: none;
+    }
+
+    .overlay.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+    <!-- 네비게이션 헤더 -->
+<header class="main-header">
+  <a href="index.html" class="roulette-btn">메인으로ㅤMAIN</a>
+</header>
+
+  <div class="search-bar">
+    <input
+      type="text"
+      id="ingredient-search"
+      placeholder="냉장고에 있는 재료를 검색해 필터링 해보세요!🥕🥔🧄🥩🥬"
+    />
+    <span class="search-icon" onclick="filterRecipes()">🔍</span>
+  </div>
+
+<div class="grid-container">
+  <div class="grid" id="recipeGrid">
+    <div class="grid-item">
+      <img src="Sfood_1.jpg" alt="떡볶이">
+      <div class="title">떡볶이</div>
+    </div>
+    <div class="grid-item">
+      <img src="Sfood_2.jpg" alt="라볶이">
+      <div class="title">라볶이</div>
+    </div>
+    <div class="grid-item">
+      <img src="Sfood_3.jpg" alt="참치김밥">
+      <div class="title">참치김밥</div>
+    </div>
+    <div class="grid-item">
+      <img src="Sfood_4.jpg" alt="땡초김밥">
+      <div class="title">땡초김밥</div>
+    </div>
+    <div class="grid-item">
+      <img src="Sfood_5.jpg" alt="분식어묵탕">
+      <div class="title">분식어묵탕</div>
+    </div>
+    <div class="grid-item">
+      <img src="Sfood_6.jpg" alt="치킨마요덮밥">
+      <div class="title">치킨마요덮밥</div>
+    </div>
+    <div class="grid-item">
+      <img src="Sfood_7.jpg" alt="쫄면">
+      <div class="title">쫄면</div>
+    </div>
+    <div class="grid-item">
+      <img src="Sfood_8.jpg" alt="떡꼬치">
+      <div class="title">떡꼬치</div>
+    </div>
+    <div class="grid-item">
+      <img src="Sfood_9.jpg" alt="소떡소떡">
+      <div class="title">소떡소떡</div>
+    </div>
+    <div class="grid-item">
+      <img src="Sfood_10.jpg" alt="잔치국수">
+      <div class="title">잔치국수</div>
+    </div>
+    <div class="grid-item">
+      <img src="Sfood_11.jpg" alt="분식집라면">
+      <div class="title">분식집라면</div>
+    </div>
+    <div class="grid-item">
+      <img src="Sfood_12.jpg" alt="피카츄돈까스">
+      <div class="title">피카츄돈까스</div>
+    </div>
+
+  </div>
+</div>
+
+  <div class="overlay" id="modalOverlay" onclick="closeModal()"></div>
+  <div class="modal" id="recipeModal">
+    <div class="modal-header">
+      오늘의 분식 요리 레시피는?
+      <span class="modal-close" onclick="closeModal()">&times;</span>
+    </div>
+    <div class="modal-content" id="modalContent">
+      <!-- Recipe details go here -->
+    </div>
+  </div>
+
+  <script>
+    const recipeGrid = document.getElementById('recipeGrid');
+    const modal = document.getElementById('recipeModal');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalContent = document.getElementById('modalContent');
+
+    // 1️⃣ 레시피 데이터를 기반으로 .grid-item 요소에 data-ingredients 속성을 추가
+document.addEventListener("DOMContentLoaded", () => {
+  const recipes = document.querySelectorAll(".grid-item");
+  
+  recipes.forEach((recipe) => {
+    const title = recipe.querySelector(".title").textContent.trim();
+    if (recipeDetails[title]) {
+      recipe.dataset.ingredients = recipeDetails[title].ingredients.toLowerCase(); // data-ingredients 속성 자동 추가
+    }
+  });
+});
+
+// 2️⃣ 검색 기능 개선 (recipeDetails 기반 검색)
+function filterRecipes() {
+  const input = document.getElementById("ingredient-search").value.toLowerCase();
+  const recipes = document.querySelectorAll(".grid-item");
+
+  recipes.forEach((recipe) => {
+    const ingredients = recipe.dataset.ingredients || ""; // undefined 방지
+    if (ingredients.includes(input)) {
+      recipe.style.display = "block";
+    } else {
+      recipe.style.display = "none";
+    }
+  });
+}
+
+// 3️⃣ 엔터키 입력 시 검색 실행
+document.getElementById("ingredient-search").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    filterRecipes();
+  }
+});
+
+
+  const recipeDetails = {
+    "떡볶이": {
+      description: "원하는 토핑과 함께 먹어요!",
+      image: "Sfood_1.jpg",
+      ingredients: "<2인분 기준><br>떡볶이떡 2컵, 물 2컵, 대파 1/2대, 통깨 약간, 고추장 2T, 고춧가루 1.5T, 간장 2T, 설탕 3T",
+      recipe: "1. 종이컵 기준 물 2컵에 떡볶이떡을 넣고 센불에서 팔팔 끓여줍니다.<br>2. 물이 끓으면 양념을 다 넣어준 뒤 잘 풀어 계속 끓여줍니다.<br>3. 국물이 졸아들면 대파를 가위로 썰어 넣고 통깨 약간 뿌려주면 완성!",
+      link: "https://www.10000recipe.com/recipe/6894096"
+    },
+    "라볶이": {
+      description: "떡볶이와 비슷하지만 또다른 매력!",
+      image: "Sfood_2.jpg",
+      ingredients: "<1인분 기준><br>떡볶이떡 1컵, 어묵 2장, 고춧가루 1.5큰술, 올리고당 1/2큰술, 고추장 1큰술, 설탕 1큰술, 국간장 1큰술, 라면사리 1/2개, 후추 약간",
+      recipe: "1. 팬에 물 3컵을 넣고 떡과 어묵, 라면사리를 넣어 센불로 끓입니다.<br>2. 불을 올리면서 바로 양념을 다 넣어서 같이 끓여줍니다.<br>3. 라면이 익을 때까지 끓여주는데, 국물이 끓어오르기 시작하면 불을 줄여가며 끓여줍니다.<br>4. 어느 정도 익었을 때 올리고당과 국간장으로 간을 맞춰주고 대파를 넣고 후추를 뿌려주면 완성!",
+      link: "https://www.10000recipe.com/recipe/6883766"
+    },
+    "참치김밥": {
+      description: "부드러운 참치마요와 함께",
+      image: "Sfood_3.jpg",
+      ingredients: "<1인분 기준><br>김밥김 2장, 밥 1공기, 마요네즈 3TS, 청양고추 1개, 참치캔 100g 1개, 단무지 2줄, 꺳잎 2장, 소금 약간, 참기름 약간, 통깨 약간",
+      recipe: "1. 참치는 기름을 빼고 마요네즈랑 섞어 준비합니다.<br>2. 청양고추는 씨를 제거하고 길게 채썰어줍니다.<br>3. 밥에 소금, 통깨, 참기름을 넣고 섞어 간합니다.<br>4. 김밥김은 1/3정도 잘라내어 김의 2/3정도에 밥을 깔고 그 위에 깻잎, 단무지, 참치마요, 청양고추를 올려줍니다.<br>5. 단단하게 말아 참기름을 발라 먹기 좋게 썰어주면 완성!",
+      link: "https://www.10000recipe.com/recipe/6876943?srsltid=AfmBOooP__JQSt37H8Ipph0e_WA8aKtdkxcuEHubr6c-nEimOJ-244yv"
+    },
+    "땡초김밥": {
+      description: "매운걸 좋아한다면 도전?",
+      image: "Sfood_4.jpg",
+      ingredients: "<3인분 기준><br>청양고추 4개, 어묵 2장, 당근 1/4개, 김밥김 4장, 밥 3공기, 참기름 1스푼, 통깨 약간, 간장 2스푼, 검은꺠 1스푼, 소금 약간",
+      recipe: "1. 청양고추와 어묵, 당근은 곱게 다져줍니다.<br>2. 달군 팬에 기름을 두르고 다진 재료를 볶아줍니다.<br>3. 볼에 밥, 간장, 참기름, 검은깨, 다진 재료를 넣고 섞어줍니다. 소금은 간을 보며 넣어주세요!<br>4. 김에 양념한 밥을 펼쳐 돌돌 말아줍니다.<br>5. 마지막으로 김밥 위에 참기름을 바르고 통깨를 뿌려먹으면 완성!",
+      link: "https://www.10000recipe.com/recipe/6927287"
+    },
+    "분식어묵탕": {
+      description: "길거리에서 먹던 그맛",
+      image: "Sfood_5.jpg",
+      ingredients: "<1인분 기준>사각어묵 적당량, 무 약간, 다시마 약간, 국물용 멸치 약간, 대파 약간, 청양고추 약간, 국간장 3스푼, 소금 약간<br>",
+      recipe: "1. 다시마, 무, 멸치로 육수를 만들어줍니다.<br>2. 어묵을 3등분으로 접어 꼬치에 꽂아줍니다.<br>3. 육수를 제외하고 건더기를 건져 어묵꼬치를 넣어줍니다.<br>4. 어묵을 넣고 끓여주다 어느 정도 익으면 국간장으로 간을 맞춰줍니다.<br>5. 마지막을 대파와 청양고추를 썰어 넣으면 완성!",
+      link: "https://www.10000recipe.com/recipe/6830149"
+    },
+    "치킨마요덮밥": {
+      description: "귀찮을때 간단하게 해먹어요",
+      image: "Sfood_6.jpg",
+      ingredients: "<1인분 기준><br>밥 1공기, 치킨너겟 적당량, 계란 2개, 양파 1/2개, 간장 2T, 맛술 1T, 올리고당 1T, 돈까스소스 약간, 마요네즈 약간",
+      recipe: "1. 치킨너겟을 노릇하게 구워 먹기 좋게 썰어줍니다.<br>2. 양파는 채를 썰어 볶다가 간장, 맛술, 올리고당을 넣고 볶아줍니다.<br>3. 계란은 풀어 계란물을 만든 후 팬에 부어 휘저으며 스크램블을 만들어줍니다.<br>4. 밥을 아래에 깔고 양파를 얹고 스크램블 에그는 가장자리에 둘러줍니다.<br>5. 맨 위에 치킨너겟을 올리고 돈까스소스와 마요네즈를 뿌려주면 완성! 기호에 따라 김가루나 통깨를 추가해도 좋아요",
+      link: "https://www.10000recipe.com/recipe/6850570"
+    },
+    "쫄면": {
+      description: "새콤달콤 쫄깃한",
+      image: "Sfood_7.jpg",
+      ingredients: "<2인분 기준><br>쫄면 2인분, 콩나물 100g, 오이 1/4개, 당근 1/4개, 깻잎 5장, 고추장 3큰술, 고춧가루 3큰술, 간장 1큰술, 식초 3큰술, 설탕 2큰술, 물엿 1큰술, 다진마늘 1/2큰술, 참깨 1큰술, 삶은계란(생략가능)",
+      recipe: "1. 오이, 당근, 깻잎은 채썰어 준비하고, 콩나물은 끓는 물에 소금 약간 넣고 3분간 삶아 건져 찬물에 씻어 물기를 빼 준비합니다.<br>2. 볼에 양념장을 모두 넣고 섞어 준비합니다.<br>3. 쫄면은 가닥가닥 떼어서 끓는 물에 넣고 식초 1스푼을 넣어 5분정도 삶아 건져 찬물에 씻어줍니다.<br>4. 물기를 뺀 쫄면에 참기름 1큰술을 넣어 버무려줍니다.<br>5. 접시에 쫄면을 놓고 야채를 올려 양념장과 잘 비벼주면 완성! 기호에 따라 삶은계란을 곁들여도 좋아요!",
+      link: "https://www.10000recipe.com/recipe/6853387"
+    },
+    "떡꼬치": {
+      description: "학교 앞에서 먹던 그맛",
+      image: "Sfood_8.jpg",
+      ingredients: "<2인분 기준><br>떡볶이떡 적당량, 고추장 1T, 설탕 1/2T, 다진마늘 1/2T, 진간장 1/2T, 올리고당 2T, 케찹 3T, 통깨 약간",
+      recipe: "1. 떡볶이떡을 끓는 물에 살짝 삶아줍니다. 약불에 2분정도 살짝만 삶아줘도 말랑해져요!<br>2. 삶은 떡을 꼬치에 꽂아줍니다.<br>3. 양념을 모두 섞어줍니다.<br>4. 팬에 기름을 충분히 두르고 따뜻한 열기가 올라오면 떡을 구워줍니다.<br>5. 구운 떡은 키친타올에 기름을 살짝 제거한 후 양념을 발라주면 완성!",
+      link: "https://www.10000recipe.com/recipe/6844310"
+    },
+    "소떡소떡": {
+      description: "휴게소 필수 아이템...",
+      image: "Sfood_9.jpg",
+      ingredients: "<2인분 기준><br>비엔나소세지 12개, 떡볶이떡 12개, 고추장 1T, 케찹 3T, 올리고당 3T, 간장 1/2T, 다진마늘 1/2T, 물 1T",
+      recipe: "1. 떡을 살짝 데쳐주고 데친 물에 비엔나소세지도 살짝 데쳐줍니다. 데친 소세지는 칼집을 살짝 넣어주세요<br>2. 데친 떡과 소세지는 꼬치에 번갈아가며 꽂아줍니다.<br>3. 달궈진 팬에 기름을 넉넉히 두르고 소떡소떡을 앞뒤로 튀기듯 노릇하게 구워줍니다.<br>4. 양념류는 모두 섞어 팬에 살짝 끓여줍니다.<br>5. 구운 소떡소떡에 떡꼬치 양념을 발라주면 완성! 기호에 따라 케찹과 머스타드를 뿌려 먹어도 좋아요!",
+      link: "https://www.10000recipe.com/recipe/6894810"
+    },
+    "잔치국수": {
+      description: "집에서 먹으면 끝없이 들어가는...",
+      image: "Sfood_10.jpg",
+      ingredients: "<1인분 기준><br>소면 1줌(100g), 애호박 1/6개, 당근 1/6개, 양파 1/4개, 계란 1개, 간장 3T, 고춧가루 1T, 고추 1개, 물 2T, 다진마늘 1/4T, 설탕 1T, 맛술 1T, 부순 참깨 1T, 참기름 약간",
+      recipe: "1. 멸치, 양파, 무, 다시마로 육수를 만들어줍니다.<br>2. 당근, 양파, 애호박은 채 썰어줍니다.<br>3. 양념류를 모두 섞어 양념장을 만들어줍니다.<br>4. 소면은 따로 삶아 준비합니다.<br>5. 멸치육수에 채썬 야채를 넣고 끓여줍니다.<br>6. 야채가 익으면 계란을 풀어 넣어줍니다.<br>7. 삶은 면에 국물을 부어준 후 양념장을 올려 먹으면 완성!",
+      link: "https://www.10000recipe.com/recipe/6860167"
+    },
+    "분식집라면": {
+      description: "분식집 라면 비밀 레시피!",
+      image: "Sfood_11.jpg",
+      ingredients: "<1인분 기준><br>라면 1개, 계란 1개, 물 3컵, 대파 약간",
+      recipe: "1. 물이 끓으면 스프를 먼저 넣어 끓여주다 면을 넣어줍니다.<br>2. 계란은 살짝만 풀어 준비합니다.<br>3. 면이 풀어지면 대파를 넣어줍니다.<br>4. 면발이 하나하나 풀리고 약간 투명해지면 면만 먼저 건져냅니다.<br>5. 여기에 풀어준 계란을 넣고 젓지 말고 몽글몽글하게 만들어 국물을 빼둔 면에 부어주면 완성!",
+      link: "https://www.10000recipe.com/recipe/6938378"
+    },
+    "피카츄돈까스": {
+      description: "어릴 적 추억을 떠올리며...",
+      image: "Sfood_12.jpg",
+      ingredients: "<3인분 기준><br>소고기와 돼지고기 다짐육 350g, 소금 약간, 후추 약간, 어니언파우더 1T, 계란 2개, 밀가루 1컵, 빵가루 2컵, 식용유 듬뿍, 케찹 2T, 올리고당 1T, 설탕 1/2T, 다진마늘 1/2T, 고추장 1T, 간장 1/2T",
+      recipe: "집에서 쉽게 구하기 어려운 터라 데코용 재료들은 생략했습니다!<br>사진과 같이 만들고 싶다면 하단 링크 참고❣<br><br>1. 종이호일을 피카츄 모양으로 잘라둡니다.<br>2. 다짐육에 소금과 후추 약간, 어니언파우더를 뿌려 주물러 섞어줍니다.<br>3. 종이호일을 깔고 고기를 3cm 두께로 평평하게 해준 뒤, 오려놓은 피카츄 모양 종이호일을 대고 모양을 만들어줍니다.<br>4. 피카츄는 1시간 정도 냉동실에 넣어 굳혀줍니다.<br>5. 그동안 케찹, 올리고당, 설탕, 다진마늘, 고추장, 간장을 섞어 소스를 만들어줍니다.<br>6. 계란 2개를 풀어주고, 접시에 밀가루, 빵가루도 각각 담아줍니다.<br>7. 피카츄를 종이호일에서 조심히 떼서 밀가루→계란물→빵가루 순으로 묻혀 종이호일에 다시 올려줍니다.<br>8. 종이호일을 붙인 채로 160도 기름에 넣어줍니다. 튀기다 호일이 분리될 때 호일을 빼주고 약 5분 정도 튀겨 건져내고, 180도에 다시 1분 튀겨서 건져줍니다.<br>9. 만들어둔 소스를 발라 먹으면 우리가 아는 추억의 피카츄돈까스 완성! 더 귀엽게 하고 싶은 분은 하단 링크 레시피 참고하기!",
+      link: "https://www.10000recipe.com/recipe/7016641"
+    },
+    // 나머지 레시피들도 같은 형식으로 추가
+  };
+
+    recipeGrid.addEventListener('click', (e) => {
+      const item = e.target.closest('.grid-item');
+      if (item) {
+        const title = item.querySelector('.title').textContent;
+        const recipeInfo = recipeDetails[title] || {};
+
+        modalContent.innerHTML = `
+        <h2>${title}</h2>
+        <p style="font-size: 15px; color: #a68d79; font-weight: 400; margin-top: -15px;">
+        ${recipeInfo.description}
+        </p>
+        <img src="${recipeInfo.image}" alt="${title}" style="width:100%;  margin-bottom: 10px;">
+        <p>📝 <b>재료:</b> ${recipeInfo.ingredients}</p>
+        <p>🍳 <b>레시피:</b><br> ${recipeInfo.recipe}</p>
+        <a href="${recipeInfo.link}" target="_blank" style="display: inline-block; color: #f15a24; margin-top: 10px; font-weight: 500;">
+          📖 추가 레시피 보러가기
+        </a>
+      `;
+      openModal(); // **openModal()을 호출하도록 변경**
+
+      function openModal() {
+        document.body.classList.add("modal-open"); // 배경 스크롤 방지
+        modal.classList.add("open");
+        modalOverlay.classList.add("show");
+    }
+
+      modal.classList.add("open");
+      modalOverlay.classList.add("show");
+    }
+  });
+
+    function closeModal() {
+      document.body.classList.remove("modal-open"); // 배경 스크롤 해제
+      modal.classList.remove('open');
+      modalOverlay.classList.remove('show');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+  <title>Food Roulette Recipe Book</title>
+  <style>
+    * {
+      font-family: 'Pretendard', sans-serif;
+      font-display: swap;
+    }
+    
+    /* 🔸 고정된 알림 헤더 (Marquee 효과) */
+    .marquee-container {
+      background-color: #f15a24;
+      color: white;
+      padding: 10px 0;
+      width: 100vw;
+      overflow: hidden;
+      position: fixed;
+      top: 0;
+      z-index: 1000;
+      white-space: nowrap;
+  }
+
+  .marquee-wrapper {
+      display: flex;
+      width: max-content; /* 두 개의 텍스트가 한 줄에 들어갈 수 있도록 설정 */
+      animation: marquee 20s linear infinite;
+  }
+
+  .marquee {
+    display: flex;
+    white-space: nowrap;
+    font-size: 1.05em;
+    font-weight: 400;
+    padding-right: 50vw; /* 다음 텍스트와의 간격을 줘야 자연스럽게 이어짐 */
+  }
+
+  @keyframes marquee {
+      from { transform: translateX(0%); }
+      to { transform: translateX(-200%); }
+  }
+
+  /* 🔸 네비게이션 헤더 */
+  .main-header {
+      position: fixed;
+      background-color: #fff0e3;
+      top: 40px; /* marquee 높이만큼 내리기 */
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px;
+      border-bottom: 2px solid #f15a24;
+      z-index: 900;
+  }
+  
+  .roulette-container {
+    margin-top: 10vh;
+  }
+
+  .roulette-btn, .about-btn {
+      font-size: 1.05em;
+      font-weight: 600;
+      color: #f15a24;
+      text-decoration: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding-left: 8px;
+      padding-right: 8px;
+      padding-top: 2px;
+  }
+
+
+   h2 {
+    font-size: 1.1rem;
+    font-weight: 100;
+    color: #333;
+    margin-top: 3px;
+
+ }
+
+    body {
+      background:#fff6ee;
+      margin: 10;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    canvas {
+      width: 130%;
+      height: auto;
+      transition: 2s;
+      pointer-events: none;
+    }
+
+    button {
+      background: #f15a24;
+      margin-top: 1.5rem;
+      padding: .8rem 1.3rem;
+      border: none;
+      font-size: 1.2rem;
+      font-weight: 500;
+      border-radius: 30px;
+      transition: .2s;
+      cursor: pointer;
+      color: #fff;
+    }
+
+    button:hover {
+      background: #444;
+      color: orange;
+      transform: scale(1.05);
+    }
+
+    /*button:active {
+      background: #444;
+      color: #f9f9f9;
+    }*/
+
+    div {
+      width: 380px;
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+      position: relative;
+    }
+
+    div.roulette-container::before {
+      content: "";
+      position: absolute;
+      width: 10px;
+      height: 40px;
+      border-radius: 5px;
+      background: #f15a24;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+    }
+
+    .modal-overlay ~ .roulette-container {
+      visibility: hidden;
+    }
+
+    /* 모달창 스타일 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 5;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 2rem;
+  text-align: center;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  font-size: 1.2rem;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+/* 모달 페이드인 효과 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fall {
+  from {
+    transform: translateY(-100vh) translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(110vh) translateX(calc(150vw * var(--random-x)));
+    opacity: 1;
+  }
+}
+
+.falling-emoji {
+  position: fixed;
+  top: -50px;
+  font-size: 5rem;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  animation: fall 3s linear infinite;
+  z-index: 10;
+}
+
+  </style>
+</head>
+<body>
+  <!-- 고정된 알림 헤더 -->
+  <div class="marquee-container">
+    <div class="marquee-wrapper">
+       <div class="marquee" id="marquee-text">
+        ★ 이 웹사이트는 매일 요리할 음식을 고르는데에 어려움을 겪는 사람들을 위한 랜덤한 음식 룰렛 레시피북을 제공하는 사이트입니다. 룰렛을 돌려 오늘의 요리를 선택해 보세요! ★ The website provides a random food roulette recipe book for people who have a hard time choosing food to cook every day. Spin the roulette and choose today's dish! ★
+       </div>
+    </div>
+</div>
+
+<!-- 네비게이션 헤더 -->
+<header class="main-header">
+    <a href="index.html" class="roulette-btn">메인으로ㅤMAIN</a>
+</header>
+
+ 
+    <div class="roulette-container">
+        <canvas width="1000" height='1000'></canvas>  
+        <button onclick="rotate()">랜덤 요리 고르기</button>
+    </div>
+  
+  <script>
+      document.addEventListener("DOMContentLoaded", function () {
+          let marqueeWrapper = document.querySelector(".marquee-wrapper");
+          let marqueeText = document.querySelector(".marquee");
+    
+          let text = marqueeText.innerHTML;
+    
+          // 기존 텍스트를 3번 복제하여 자연스럽게 이어지도록 설정
+          marqueeText.innerHTML = text + " &nbsp;&nbsp; " + text + " &nbsp;&nbsp; " + text;
+      });
+    
+    
+
+    const $c = document.querySelector("canvas");
+    const ctx = $c.getContext(`2d`);
+
+    const product = [
+    { name: "🍚🧄 한식", page: "korean.html", emoji: "🍚🧄" },
+    { name: "🥟🍜 중식", page: "chinese.html", emoji: "🥟🍜" },
+    { name: "🍝🥗 양식", page: "western.html", emoji: "🍝🥗" },
+    { name: "🍣🍥 일식", page: "japanese.html", emoji: "🍣🍥" },
+    { name: "🍤🍙 분식", page: "snack.html", emoji: "🍤🍙" },
+    { name: "🍕🍔🍟 그냥 배달!", page: "delivery.html", emoji: "🍕🍔🍟" }
+    ];
+
+    const colors = [
+    "#FFD9A3",
+    "#FFF7EC",
+    "#FFD9A3",
+    "#FFF7EC",
+    "#FFD9A3",
+    "#FFF7EC",
+
+      "#FEFCF4",
+      "#dc0936",
+      "#e6471d",
+      "#f7a416",
+      "#efe61f",
+      "#60b236",
+      "#209b6c",
+      "#169ed8",
+      "#0d66e4",
+      "#87207b",
+      "#be107f",
+      "#e7167b",
+    ];
+
+    const newMake = () => {
+      const [cw, ch] = [$c.width / 2, $c.height / 2];
+      const arc = (2 * Math.PI) / product.length;
+
+      for (let i = 0; i < product.length; i++) {
+        ctx.beginPath();
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.moveTo(cw, ch);
+        ctx.arc(cw, ch, cw - 0, arc * i - Math.PI / 2, arc * (i + 1) - Math.PI / 2);
+        ctx.fill();
+
+        
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.3)";  // 테두리 색상 (검은색)
+        ctx.lineWidth = 1;         // 테두리 두께
+        ctx.stroke();              // 테두리 그리기
+ 
+        ctx.closePath();
+      }
+
+      ctx.fillStyle = "#000";
+      ctx.font = "300 2.5rem Pretendard";
+      ctx.textAlign = "center";
+
+      for (let i = 0; i < product.length; i++) {
+        const angle = arc * i + arc / 2 - Math.PI / 2;
+
+        ctx.save();
+
+        ctx.translate(
+          cw + Math.cos(angle) * (cw - 100),
+          ch + Math.sin(angle) * (ch - 100)//중앙에서 가까운 정도//
+        );
+
+        ctx.rotate(angle + Math.PI / 2);
+
+        product[i].name.split(" ").forEach((text, j) => {
+          ctx.fillText(text, 0, 50 * j);//글자 행간 조절//
+        });
+
+        ctx.restore();
+      }
+
+      ctx.fillStyle = "#000";
+      ctx.beginPath();
+      ctx.moveTo(cw, ch);
+      ctx.arc(cw, ch, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.closePath();
+    };
+
+    const rotate = () => {
+      $c.style.transform = `initial`;
+      $c.style.transition = `initial`;
+
+      setTimeout(() => {
+        const ran = Math.floor(Math.random() * product.length);
+        const arc = 360 / product.length;
+        const rotate = (360 - arc * (ran + 1) + 3600) + (arc / 3);
+
+        $c.style.transform = `rotate(${rotate}deg)`;
+        $c.style.transition = `2s`;
+
+        setTimeout(() => {
+          // 선택된 요리 모달 띄우기
+          showModal(product[ran].name, product[ran].page, product[ran].emoji);
+  }, 2000);
+}, 1);
+    };
+
+    const startEmojiRain = (emoji) => {
+      // 이모지를 개별 문자로 나누기 (🍚🧄 => ['🍚', '🧄'])
+     const emojiArray = Array.from(emoji);
+
+     emojiArray.forEach((singleEmoji) => {
+      for (let i = 0; i < 10; i++) {  // 각 이모지를 10개씩 떨어지게
+        const emojiElement = document.createElement('div');
+        emojiElement.className = 'falling-emoji';
+        emojiElement.innerText = singleEmoji; // 개별 이모지 적용
+  
+        emojiElement.style.left = `${Math.random() * 100}vw`;  // 랜덤한 위치에서 떨어짐
+        emojiElement.style.setProperty('--random-x', Math.random() * 0.2 - 0.1);  // 좌우 랜덤 이동
+        emojiElement.style.animationDuration = `${Math.random() * 2 + 2}s`;  // 애니메이션 속도 조절
+  
+        document.body.appendChild(emojiElement);
+  
+        setTimeout(() => emojiElement.remove(), 4000);  // 일정 시간 후 삭제
+      }
+    });
+  };
+    
+    // 모달창 띄우기 함수 (자동 이동)
+    const showModal = (foodName, pageUrl, emoji) => {
+      const modal = document.createElement('div');
+      modal.className = "modal-overlay";
+      modal.innerHTML = `
+          <div class="modal-content">
+            <p>오늘의 요리는 <strong>${foodName}</strong><br>레시피북으로 이동 중∙∙∙</p>
+          </div>
+      `;
+      document.body.appendChild(modal);
+    
+      // 선택된 음식의 이모지를 뿌리는 함수 호출
+      startEmojiRain(emoji);
+    
+      setTimeout(() => {
+        window.location.href = pageUrl;
+      }, 2500);
+    };
+    
+
+document.fonts.load('1em Pretendard').then(() => {
+  newMake();  // 폰트 로드 후 룰렛을 다시 그리기
+});
+
+    newMake();
+  </script>
+</body>
+</html>

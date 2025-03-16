@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Roulette Recipe Book</title>
+    <style>
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/pretendard/1.3.8/static/pretendard.css');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #fff6ee;
+            font-family: 'Pretendard', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* 🔸 고정된 알림 헤더 (Marquee 효과) */
+        .marquee-container {
+            background-color: #f15a24;
+            color: white;
+            padding: 10px 0;
+            width: 100vw;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+            white-space: nowrap;
+        }
+
+        .marquee-wrapper {
+            display: flex;
+            width: 200%; /* 두 개의 텍스트가 한 줄에 들어갈 수 있도록 설정 */
+        }
+
+        .marquee {
+            display: flex;
+            max-width: 100%;
+            animation: marquee 25s linear infinite;
+            font-size: 1.05em;
+            font-weight: 400;
+        }
+
+        @keyframes marquee {
+            from { transform: translateX(0%); }
+            to { transform: translateX(-100%); }
+        }
+
+        /* 🔸 네비게이션 헤더 */
+        .main-header {
+            position: fixed;
+            background-color: #fff0e3;
+            top: 40px; /* marquee 높이만큼 내리기 */
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 7px;
+            border-bottom: 2px solid #f15a24;
+            z-index: 900;
+        }
+        
+
+        .roulette-btn, .about-btn {
+            font-size: 1.05em;
+            font-weight: 600;
+            color: #f15a24;
+            text-decoration: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding-left: 8px;
+            padding-right: 8px;
+            padding-top: 2px;
+        }
+
+        /* 🔸 메인 콘텐츠 */
+        .main-content {
+            text-align: center;
+            margin-top: 40vh;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 30vh;
+            font-weight: bold;
+            color: #f15a24;
+            position: relative;
+            display: inline-block;
+            line-height: 1;
+            z-index: 2;
+            text-align: left;
+        }
+        
+        h1 .top-text {
+            display: block;
+            position: relative;
+            left: 5%;  /* 오른쪽으로 이동 */
+        }
+        
+        h1 .bottom-text {
+            display: block;
+            position: relative;
+            right: 5%; /* 왼쪽으로 이동 */
+        }
+        
+        /* 타이핑 효과 */
+h1 span {
+    border-right: 4px solid #f15a24; /* 커서 효과 */
+    white-space: nowrap;
+    overflow: hidden;
+    display: inline-block;
+    animation: blinkCursor 0.8s infinite;
+}
+
+/* 깜빡이는 커서 애니메이션 */
+@keyframes blinkCursor {
+    50% { border-color: transparent; }
+}
+
+/* 커서 점점 사라지는 효과 */
+@keyframes fadeOutCursor {
+    from { border-right: 4px solid #f15a24; }
+    to { border-right: 4px solid transparent; }
+}
+
+/* 커서 부드럽게 사라지기 */
+.fade-out {
+    animation: fadeOutCursor 1s forwards;
+}
+
+        /* 🔸 배경 이모지 */
+        .emoji-img {
+            position: absolute;
+            width: 15vh; /* 기본 크기 설정 */
+            height: auto;
+            z-index: 1;
+        }
+
+        .emoji-1 { width: 50vh; top: 5%; left: -5%; transform: rotate(0deg); }
+        .emoji-2 { width: 40vh; top: -20%; right: 30%; transform: rotate(10deg); }
+        .emoji-3 { width: 30vh; bottom: 5%; right: 0%; transform: rotate(-5deg); }
+
+        /* 🔸 모달 창 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 100vw;
+            height: 40vh;
+            background: #fff0e3;
+            box-shadow: -5px 0 10px rgba(0,0,0,0.2);
+            padding: 8px;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+            z-index: 800;
+        }
+
+        .modal-content {
+            margin-top: 70px;
+            color: #f15a24;
+            display: flex;
+            flex-direction: column;
+            
+        }
+
+        h2 {
+            font-size: 1.05em;
+            font-weight: 600;
+            line-height: 1.5em;
+            color: #f15a24;
+            text-decoration: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding-left: 10px;
+            padding-right: 10px;
+            text-align: left;
+        }
+
+        .sns-icon {
+            width: 20px; /* 아이콘 크기 */
+            height: auto;
+            display: block;
+            margin: 10px; /* 위쪽 여백 10px, 가운데 정렬 */
+            margin-top: 20px;
+            text-align: left;
+            
+        }
+        
+        .modal .close-btn {
+            margin: 10px; /* 위쪽 여백 10px */
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #f15a24;
+            background: none;
+            border: none;
+            align-self: flex-end; /* 오른쪽 정렬 */
+        }
+
+        /* 모달 활성화 */
+        .modal.show {
+            display: block;
+            transform: translateX(0);
+        }
+
+    </style>
+</head>
+<body>
+    <!-- 고정된 알림 헤더 -->
+    <div class="marquee-container">
+        <div class="marquee-wrapper">
+           <div class="marquee">
+            ★ 이 웹사이트는 매일 요리할 음식을 고르는데에 어려움을 겪는 사람들을 위한 랜덤한 음식 룰렛 레시피북을 제공하는 사이트입니다. 룰렛을 돌려 오늘의 요리를 선택해 보세요! ★ The website provides a random food roulette recipe book for people who have a hard time choosing food to cook every day. Spin the roulette and choose today's dish! ★
+           </div>
+           <div class="marquee">
+            ★ 이 웹사이트는 매일 요리할 음식을 고르는데에 어려움을 겪는 사람들을 위한 랜덤한 음식 룰렛 레시피북을 제공하는 사이트입니다. 룰렛을 돌려 오늘의 요리를 선택해 보세요! ★ The website provides a random food roulette recipe book for people who have a hard time choosing food to cook every day. Spin the roulette and choose today's dish! ★
+           </div>
+        </div>
+    </div>
+
+    <!-- 네비게이션 헤더 -->
+    <header class="main-header">
+        <a href="roulette.html" class="roulette-btn">룰렛 돌리러 가기!ㅤGO TO THE ROULETTE</a>
+        <button class="about-btn" onclick="openModal()">이 사이트에 대하여ㅤABOUT</button>
+    </header>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main-content">
+        <!-- 배경 이모지 -->
+        <!-- 이모지 대신 SVG 이미지 추가 -->
+         <img src="drum.svg" class="emoji-img emoji-1">
+         <img src="donut.svg" class="emoji-img emoji-2">
+         <img src="ham.svg" class="emoji-img emoji-3">
+
+
+        <h1>
+            <span class="top-text" id="top-text"></span>
+            <span class="bottom-text" id="bottom-text"></span>
+        </h1>
+        
+    </main>
+
+    <!-- 모달 창 -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2>이 웹사이트는 /record 소모임 활동의 일환으로, 전시를 위해 준비되었습니다. 매일 음식을 해먹을 때마다 메뉴 선정에 어려움을 겪던 사람이 제작한 룰렛 레시피북 사이트입니다.
+            <br>랜덤한 룰렛을 통하여 오늘의 요리 테마를 고르고 냉장고에 있는 재료를 검색하여 오늘의 요리를 결정할 수 있습니다!<br>
+            <a href="https://www.instagram.com/choiest_/" target="_blank">
+                <img src="instagram.svg" class="sns-icon">
+            </a>            
+        </div>
+    </div>
+
+    <script>
+        // 모달 열기
+        function openModal() {
+            document.getElementById("modal").classList.add("show");
+        }
+
+        // 모달 닫기
+        function closeModal() {
+            document.getElementById("modal").classList.remove("show");
+        }
+
+        //타이핑 애니메이션
+        document.addEventListener("DOMContentLoaded", function () {
+            const topText = "food roulette";
+            const bottomText = "recipe book";
+        
+            const topElement = document.getElementById("top-text");
+            const bottomElement = document.getElementById("bottom-text");
+        
+            let topIndex = 0;
+            let bottomIndex = 0;
+        
+            function typeTopText() {
+                if (topIndex < topText.length) {
+                    topElement.innerHTML += topText[topIndex];
+                    topIndex++;
+                    setTimeout(typeTopText, 100); // 타이핑 속도 조절
+                } else {
+                    setTimeout(typeBottomText, 500); // 위쪽 다 치고 아래 시작
+                }
+            }
+        
+            function typeBottomText() {
+                if (bottomIndex < bottomText.length) {
+                    bottomElement.innerHTML += bottomText[bottomIndex];
+                    bottomIndex++;
+                    setTimeout(typeBottomText, 100);
+                } else {
+                    // 모든 타이핑 끝난 후 커서 제거
+                    setTimeout(() => {
+                        topElement.classList.add("fade-out");
+                        bottomElement.classList.add("fade-out");
+                    }, 1000);
+                }
+            }
+        
+            typeTopText(); // 실행 시작
+        });
+        
+    </script>
+</body>
+</html>

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>중식 레시피북!</title>
+  <style>
+    @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
+
+    * {
+      font-family: Pretendard;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #fff6ee;
+    }
+
+    /* 🔸 네비게이션 헤더 */
+    .main-header {
+      position: fixed;
+      background-color: #fff0e3;
+      top: 0px; /* marquee 높이만큼 내리기 */
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px;
+      border-bottom: 2px solid #f15a24;
+      z-index: 900;
+  }
+  
+  body {
+    padding-top: 40px; /* 네비게이션 높이만큼 추가 */
+  }
+
+  .roulette-btn, .about-btn {
+      font-size: 1.05em;
+      font-weight: 600;
+      color: #f15a24;
+      text-decoration: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding-left: 8px;
+      padding-right: 8px;
+      padding-top: 2px;
+  }
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+      position: relative;
+      width: 50%;
+      margin: 20px auto 30px;
+      border: 2px solid #f15a24;
+      border-radius: 30px;
+      padding: 5px 15px;
+      background-color: white;
+    }
+
+    .search-bar input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      padding: 10px;
+    }
+
+    .search-icon {
+      position: absolute;
+      right: 15px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .grid-container {
+      max-width: 1000px; /* 그리드의 최대 너비 설정 */
+      height: 650px; /* 전체 높이 설정 */
+      margin: 0 auto; /* 중앙 정렬 */
+      padding: 0px 20px; /* 위와 양쪽에 여백 추가 */
+  }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px; /*아이템 사이의 간격*/
+      
+    }
+
+    .grid-item {
+      /*background-color: #4a4a4a;*/
+      overflow: hidden;
+      
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .grid-item:hover {
+      transform: scale(1.05);
+    }
+
+    .grid-item img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .grid-item .title {
+      color: #f15a24;
+      padding: 0;
+      margin-top: 10px;
+      text-align: left;
+      font-weight: 400;
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 33%;
+      height: 100%;
+      background: #fff6ee;
+      box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+      overflow-y: auto;
+      transition: right 0.3s ease;
+      z-index: 1000;
+    }
+
+    .modal.open {
+      right: 0;
+    }
+
+    .modal-header {
+      padding-left: 20px;
+      padding-top: 15px;
+      padding-bottom: 15px;
+      font-size: 1.1em;
+      font-weight: 600;
+      background: #fff0e3;
+      border-bottom: 2px solid #f15a24; /* 주황색 밑줄 추가 */
+      color: #f15a24;
+    }
+    
+    /* 모달이 열릴 때 배경 스크롤 방지 */
+    body.modal-open {
+    overflow: hidden;
+    }
+
+    .modal-content {
+      padding: 20px;
+      color: #f15a24;
+      font-size: 16px; /* 글자 크기 */
+      line-height: 1.6; /* 행간 (가독성 증가) */
+      text-align: left; /* 텍스트 정렬 */
+
+    }
+
+    .modal-content h2 {
+      font-size: 1.2em; /* 글자 크기 */
+      font-weight: 500; /* 글자 굵기 */
+      text-align: left; /* 중앙 정렬 */
+      color: #f15a24; /* 주황색 */
+      margin-bottom: 15px; /* 아래 여백 추가 */
+    }
+    
+
+    .modal-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 1.5em;
+      cursor: pointer;
+      color: #f15a24;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      display: none;
+    }
+
+    .overlay.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <!-- 네비게이션 헤더 -->
+<header class="main-header">
+  <a href="index.html" class="roulette-btn">메인으로ㅤMAIN</a>
+</header>
+
+  <div class="search-bar">
+    <input
+      type="text"
+      id="ingredient-search"
+      placeholder="냉장고에 있는 재료를 검색해 필터링 해보세요!🥕🥔🧄🥩🥬"
+    />
+    <span class="search-icon" onclick="filterRecipes()">🔍</span>
+  </div>
+
+<div class="grid-container">
+  <div class="grid" id="recipeGrid">
+    <div class="grid-item">
+      <img src="Cfood_1.jpg" alt="짜장밥">
+      <div class="title">짜장밥</div>
+    </div>
+    <div class="grid-item">
+      <img src="Cfood_2.jpg" alt="굴짬뽕">
+      <div class="title">굴짬뽕</div>
+    </div>
+    <div class="grid-item">
+      <img src="Cfood_3.jpg" alt="차돌짬뽕">
+      <div class="title">차돌짬뽕</div>
+    </div>
+    <div class="grid-item">
+      <img src="Cfood_4.jpg" alt="탕수육">
+      <div class="title">탕수육</div>
+    </div>
+    <div class="grid-item">
+      <img src="Cfood_5.jpg" alt="계란볶음밥">
+      <div class="title">계란볶음밥</div>
+    </div>
+    <div class="grid-item">
+      <img src="Cfood_6.jpg" alt="마파두부">
+      <div class="title">마파두부</div>
+    </div>
+    <div class="grid-item">
+      <img src="Cfood_7.jpg" alt="마라샹궈">
+      <div class="title">마라샹궈</div>
+    </div>
+    <div class="grid-item">
+      <img src="Cfood_8.jpg" alt="크림새우">
+      <div class="title">크림새우</div>
+    </div>
+    <div class="grid-item">
+      <img src="Cfood_9.jpg" alt="게살계란탕">
+      <div class="title">게살계란탕</div>
+    </div>
+    <div class="grid-item">
+      <img src="Cfood_10.jpg" alt="군만두">
+      <div class="title">군만두</div>
+    </div>
+    <div class="grid-item">
+      <img src="Cfood_11.jpg" alt="어향가지">
+      <div class="title">어향가지</div>
+    </div>
+    <div class="grid-item">
+      <img src="Cfood_12.jpg" alt="고추잡채">
+      <div class="title">고추잡채</div>
+    </div>
+
+  </div>
+</div>
+
+  <div class="overlay" id="modalOverlay" onclick="closeModal()"></div>
+  <div class="modal" id="recipeModal">
+    <div class="modal-header">
+      오늘의 중식 요리 레시피는?
+      <span class="modal-close" onclick="closeModal()">&times;</span>
+    </div>
+    <div class="modal-content" id="modalContent">
+      <!-- Recipe details go here -->
+    </div>
+  </div>
+
+  <script>
+    const recipeGrid = document.getElementById('recipeGrid');
+    const modal = document.getElementById('recipeModal');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalContent = document.getElementById('modalContent');
+
+    // 1️⃣ 레시피 데이터를 기반으로 .grid-item 요소에 data-ingredients 속성을 추가
+document.addEventListener("DOMContentLoaded", () => {
+  const recipes = document.querySelectorAll(".grid-item");
+  
+  recipes.forEach((recipe) => {
+    const title = recipe.querySelector(".title").textContent.trim();
+    if (recipeDetails[title]) {
+      recipe.dataset.ingredients = recipeDetails[title].ingredients.toLowerCase(); // data-ingredients 속성 자동 추가
+    }
+  });
+});
+
+// 2️⃣ 검색 기능 개선 (recipeDetails 기반 검색)
+function filterRecipes() {
+  const input = document.getElementById("ingredient-search").value.toLowerCase();
+  const recipes = document.querySelectorAll(".grid-item");
+
+  recipes.forEach((recipe) => {
+    const ingredients = recipe.dataset.ingredients || ""; // undefined 방지
+    if (ingredients.includes(input)) {
+      recipe.style.display = "block";
+    } else {
+      recipe.style.display = "none";
+    }
+  });
+}
+
+// 3️⃣ 엔터키 입력 시 검색 실행
+document.getElementById("ingredient-search").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    filterRecipes();
+  }
+});
+
+
+  const recipeDetails = {
+    "짜장밥": {
+      description: "간단하게 짜장 가루로 짜장밥!",
+      image: "Cfood_1.jpg",
+      ingredients: "<2인분 기준><br>카레용 돼지고기 180g, 해물믹스 1컵, 양파 1/2개, 다진마늘 1큰술, 다진생강 1큰술, 짜장가루 100g, 호박 1/5개, 당근 1/5개, 양배추 1컵, 대파 1/2대, 청주 2큰술, 물 700ml",
+      recipe: "1. 집에 있는 야채들과 해물 등을 활용해서 깍둑썰기해서 준비합니다.<br>2. 팬에 기름을 두르고 다진마늘, 썰어둔 파, 다진생강을 넣고 볶아줍니다.<br>3. 그렇게 볶다가 돼지고기를 넣고 볶아주다 청주를 넣어줍니다.<br>4. 이제 야채 등 나머지 재료들을 모두 넣고 볶아줍니다.<br>5. 재료들이 어느정도 볶아졌다면 물을 부어서 끓여줍니다.<br>6. 짜장가루를 넣고, 잘 저어가면서 센불에서 계속 끓여줍니다.<br>7. 서서히 걸쭉해져 갈텐데 계속 눌러 붙지 않게 저어줍니다.<br>8. 걸쭉하게 완성되면 불을 끄고 참기름을 살짝 두르면 완성! 계란후라이를 곁들여 먹으면 더 좋아요!",
+      link: "https://www.10000recipe.com/recipe/6879446"
+    },
+    "굴짬뽕": {
+      description: "굴로 시원하게 백짬뽕 도전!",
+      image: "Cfood_2.jpg",
+      ingredients: "<1인분 기준><br>중화면(혹은 아무 면이나 1인분), 굴 250g, 양파 35g, 당근 35g, 호박 채 30g, 청경채 50g, 표고버섯 35g, 양송이버섯 35g, 부추 1줌, 청양고추 약간, 새우살 30g, 식용유 1큰술, 마른고추 5개, 다진마늘 1큰술, 대파채 1큰술, 간장 1큰술, 치킨스톡 1티스푼, 미원 1티스푼, 꽃소금 1티스푼, 후추 약간",
+      recipe: "1. 양파, 당근, 호박은 채썰고 청경채, 표고버섯, 양송이는 편썰어 준비합니다.<br>2. 굴은 깨끗이 씻어서 준비합니다.<br>3. 팬에 식용유를 두르고 마른고추를 넣고 볶다가 다진마늘, 파를 넣고 간장 1큰술을 넣고 볶아줍니다.<br>4. 준비된 야채들을 넣고 센불에서 볶아줍니다. 집이라면 토치로 불맛을 내줘도 좋아요!<br>5. 육수를 한국자 넣고 굴을 넣고 끓여줍니다.<br>6. 끓어오르면 육수를 한국자 더 넣고 치킨스톡, 미원, 꽃소금, 청양고추와 부추를 넣고 후추 약간을 뿌려줍니다.<br>7. 면은 삶아서 찬물에 헹궈 다시 뜨거운 물에 살짝 데쳐 그릇에 담아둡니다.<br>8. 면 위에 국물을 부어내면 완성! 홍고추 등으로 데코해도 좋아요",
+      link: "https://www.10000recipe.com/recipe/6934579"
+    },
+    "차돌짬뽕": {
+      description: "짬뽕은 역시 빨간색이지",
+      image: "Cfood_3.jpg",
+      ingredients: "<2인분 기준><br>중화면(혹은 아무 면이나 1인분), 차돌박이 150g, 양파 1/2개, 양배추 1/4통, 청양고추 1-2개, 진간장 3큰술, 굴소스 3스푼, 소금 약간, 냉동새우 15마리, 대파 1주먹, 당근 40g, 다진마늘 1큰술, 고춧가루 5스푼, 후추 약간",
+      recipe: "1. 먼저 차돌박이 핏물을 제거해줍니다.<br>2. 양파, 양배추, 대파, 당근을 적당한 크기로 잘라 준비합니다. 채썰어도 좋고, 모양내서 썰어도 좋아요<br>3. 팬에 기름을 넉넉히 두르고 대파를 볶아서 파기름을 내주다가 냄새가 나면 마늘을 넣어서 같이 볶아줍니다.<br>4. 어느 정도 볶아지면 새우를 넣어줍니다.<br>5. 대파와 양배추, 양파를 넣고 숨이 죽을 때까지 볶아줍니다.<br>6. 어느 정도 숨이 죽으면 간장 3스푼, 소금 1꼬집, 후추를 넣어줍니다.<br>7. 청양고추와 당근을 넣고 고춧가루와 굴소스를 넣어줍니다.<br>8. 잘 볶아진 재료에 물을 재료가 잠길 정도로 넣고 끓여줍니다.<br>9. 마지막으로 차돌박이를 넣고 푹 끓여주다 면 위에 국물을 부어주면 완성!",
+      link: "https://www.10000recipe.com/recipe/6980228"
+    },
+    "탕수육": {
+      description: "오늘은 부먹? 찍먹?",
+      image: "Cfood_4.jpg",
+      ingredients: "<3인분 기준><br>돼지고기 1덩이, 튀김가루 2컵, 계란 1개, 물 2컵, 우유 약간, 전분가루 2컵, 식초 8T, 설탕 8T, 간장 2T, 케첩 4T, 물 4T, 양파 1.5개, 당근 1개, 파 약간",
+      recipe: "1. 돼지고기는 우유에 약 20분 재워줍니다.<br>2. 양파는 깍둑썰기, 당근은 얇은 반달로 썰어줍니다.<br>3. 소스 재료들을 섞어줍니다.<br>4. 재워둔 고기는 한입크기로 썰어 튀김가루를 묻혀줍니다.<br>5. 튀김가루를 입은 고기에, 전분 2컵, 계란, 물을 섞은 튀김옷을 한번 더 입혀줍니다.<br>6. 예열해둔 기름에 고기를 넣고 10분정도 튀겨줍니다.<br>7. 한번 튀긴 건 꺼내서 식혀뒀다가 한번 더 튀겨줍니다.<br>8. 소스를 위해 파기름을 내주다 파향이 올라오면 당근과 양파를 넣고 볶아줍니다.<br>9. 양파가 익으면 소스를 넣고 물을 살짝 넣어 끓여주다, 전분과 물을 1:1로 혼합한 전분물을 조금씩 넣어가며 농도를 맞춰줍니다.<br>10. 소스를 곁들이면 탕수육 완성!",
+      link: "https://www.10000recipe.com/recipe/6879620"
+    },
+    "계란볶음밥": {
+      description: "간단하지만 고슬고슬 맛있게",
+      image: "Cfood_5.jpg",
+      ingredients: "<2인분 기준><br>밥 2공기, 대파 1/2대, 식용유 적당량, 계란 2개, 굴소스 2T, 후추 약간",
+      recipe: "1. 대파는 잘게 썰어 준비합니다.<br>2. 볼에 밥을 담고 계란을 풀어 잘 섞어 준비합니다.<br>3. 달군 팬에 식용유를 적당히 붓고 파기름을 내줍니다.<br>4. 파향이 솔솔 올라오면 계란과 섞은 밥을 넣어 센불에 같이 볶아줍니다.<br>5. 후추를 뿌리고 굴소스로 간을 맞춰 휘리릭 볶아 불을 꺼줍니다.<br>6. 밥그릇에 담아서 동그랗게 퍼내면 완성!",
+      link: "https://www.10000recipe.com/recipe/6889424"
+    },
+    "마파두부": {
+      description: "밥에 비벼먹으면 밥도둑!",
+      image: "Cfood_6.jpg",
+      ingredients: "<2인분 기준><br>다진 돼지고기 450g, 두부 1모, 썰어둔 파 1줌, 청양고추 살짝, 고추장 2스푼, 된장 1스푼, 다진마늘 1스푼, 간장 1스푼, 고춧가루 1스푼, 올리고당 0.5스푼, 참기름 0.5스푼, 전분 0.5스푼",
+      recipe: "1. 팬에 식용유를 두르고 파를 먼저 볶아 파기름을 내줍니다.<br>2. 파기름이 어느정도 나면 다짐육을 넣고 볶아줍니다.<br>3. 고추장, 된장, 고춧가루, 간장, 올리고당을 넣고 볶아줍니다.<br>4. 물은 종이컵 1-1.5컵을 넣고 간을 보면서 조절해줍니다.<br>5. 썰어둔 두부를 넣고, 청양고추를 넣어 자작해질 때까지 졸여주다 전분물을 풀어서 농도를 맞춰줍니다.<br>6. 참기름을 살짝 둘러주면 완성! 밥에 비벼드세요!",
+      link: "https://www.10000recipe.com/recipe/6911795"
+    },
+    "마라샹궈": {
+      description: "매운게 땡기는 날...",
+      image: "Cfood_7.jpg",
+      ingredients: "<4인분 기준><br>대패삼겹살 300g, 편마늘 5-6개, 대파 1/2개, 알배추 5-6장, 느타리버섯 약간, 새우 100g, 목이버섯 약간, 건두부 약간, 중국당면 약간, 청경채 약간, 마라샹궈소스 1팩, 고추기름 약간",
+      recipe: "1. 야채와 재료들은 한입 크기로 모두 썰어줍니다. 원하는 재료 어떤 것이든 넣어 먹어도 좋아요!<br>2. 달궈진 팬에 고추기름 3바퀴를 두르고 편마늘, 다진 대파를 넣고 볶아줍니다.<br>3. 마늘향이 올라올 때 대패삼겹살을 넣고 볶아줍니다. 우삼겹이면 더 맛있어요...<br>4. 고기가 익으면서 기름이 나오면 센불에 모든 재료를 다 넣고 골고루 섞어줍니다.<br>5. 마라소스를 넣고, 센불에 재료가 익을 때까지 계속 볶아주면 완성!",
+      link: "https://www.10000recipe.com/recipe/6915975"
+    },
+    "크림새우": {
+      description: "마라샹궈랑 꿀조합!",
+      image: "Cfood_8.jpg",
+      ingredients: "<1인분 기준><br>새우 13마리, 튀김가루 60g, 물 1/3종이컵, 마요네즈 4T, 설탕 2T, 식초 1T",
+      recipe: "1. 튀김가루와 물을 2:1 비율로 섞어줍니다.<br>2. 해동된 새우는 물기를 제거해주고, 튀김물에 새우를 담가 옷을 잘 입혀줍니다.<br>3. 기름에 튀김물을 살짝 넣어보고 3초 뒤 떠오르면 그때 튀겨줍니다! 서로 붙지 않도록 톡톡 쳐주세요<br>4. 키친타올에 튀긴 새우들을 올려줍니다.<br>5. 마요네즈, 설탕, 식초는 잘 섞어준 뒤 팬에 올려 약불로 잘 저어줍니다.<br>6. 소스가 진한 베이지색이 되면 튀김을 넣어 빠르게 섞어줍니다. 파슬리를 뿌려 데코해주면 완성!",
+      link: "https://www.10000recipe.com/recipe/6952193"
+    },
+    "게살계란탕": {
+      description: "부드럽고 속이 편안한",
+      image: "Cfood_9.jpg",
+      ingredients: "<2인분 기준><br>물 700ml, 크래미 5개입, 양파 1/2개, 표고버섯 1개, 대파 약간, 굴소스 1스푼, 식용유 1스푼, 계란 2개, 전분가루 2스푼, 팽이버섯 1개, 진간장 1스푼, 소금 약간",
+      recipe: "1. 달궈진 팬에 식용유를 살짝 둘러 파기름을 내줍니다.<br>2. 파가 어느 정도 볶아지면 양파를 슬라이스해서 함께 볶아줍니다.<br>3. 양파까지 다 볶아지면 표고버섯 1개, 진간장, 굴소스를 넣어 한번 더 볶아주다 마지막에 팽이버섯을 살짝 볶아줍니다.<br>4. 물 700ml를 넣고 팔팔 끓여줍니다.<br>5. 육수가 끓는 동안 크래미를 잘게 찢어 준비합니다.<br>6. 육수가 끓어오르면 크래미를 넣고 간을 살짝 맞춰줍니다.<br>7. 전분가루 2스푼과 물 2스푼을 섞어 전분물을 만들어준 뒤, 약불로 줄인 국물에 살살 넣어 빠르게 섞어줍니다.<br>8. 계란 2알은 풀어 계란물을 만들어둔 뒤 국을 다시 팔팔 끓여 휙 부어줍니다. 이때 계란물을 붓고 불을 바로 꺼주고 그릇에 담아내면 완성!",
+      link: "https://www.10000recipe.com/recipe/6882902"
+    },
+    "군만두": {
+      description: "서비스로는 부족하잖아...",
+      image: "Cfood_10.jpg",
+      ingredients: "<2인분 기준><br>냉동만두 1팩, 식용유 3스푼, 물 1소주컵, 간장 2작은술, 식초 1작은술, 고춧가루 1작은술",
+      recipe: "1. 달군 팬에 기름을 두르고 만두를 나란히 올려줍니다. 중불로 3분간 노릇하게 익혀줍니다.<br>2. 소주컵으로 물 1잔을 붓고 바로 뚜껑을 닫아줍니다.<br>3. 3-4분간 더 구워 촉촉하게 익혀주고, 뚜껑을 열어 만두를 돌려가며 구워서 수분을 완전히 날려 바삭하게 구워줍니다.<br>4. 간장 2, 식초 1, 고춧가루 1을 섞은 양념간장을 곁들여 먹으면 완성!",
+      link: "https://www.10000recipe.com/recipe/6857693"
+    },
+    "어향가지": {
+      description: "이국적인 맛이 끌린다면?",
+      image: "Cfood_11.jpg",
+      ingredients: "<3인분 기준><br>가지 3개, 대파 1개, 청양고추 3개, 홍고추 3개, 양파 1개, 식용유 적당량, 고추기름 2스푼, 두반장 2스푼, 굴소스 1스푼, 설탕 1스푼, 소금 1/3티스푼",
+      recipe: "1. 가지는 0.5cm정도 크기로 썰고 양파는 얇게 채, 고추와 대파는 잘게 잘라줍니다.<br>2. 팬에 가지를 구워 수분기를 날려 빼둡니다.<br>3. 팬에 식용유와 파를 볶다 숨이 좀 죽으면 고추기름을 넣고 볶아줍니다.<br>4. 양파와 청양고추, 홍고추를 넣고 볶다 양파의 색이 변하기 시작하면 굴소스, 두반장, 설탕을 넣고 볶아줍니다.<br>5. 양념과 야채가 잘 섞이면, 구워놨던 가지를 넣고 같이 잘 섞어 볶아줍니다.<br>6. 야채가 모두 익을 때까지 볶아주다 소금으로 간을 살짝 맞춰주면 완성!",
+      link: "https://www.10000recipe.com/recipe/6853813"
+    },
+    "고추잡채": {
+      description: "사실 메인은 꽃빵이래요...",
+      image: "Cfood_12.jpg",
+      ingredients: "<4인분 기준><br>돼지고기(등심) 300g, 꽃빵 8-9개, 노랑 파프리카 1/2개, 빨강 파프리카 1/2개, 피망 1개, 표고버섯 2개, 느타리버섯 1줌, 양파 1/2개, 대파(흰부분) 1대, 고추기름 3스푼, 다진마늘 1.5스푼, 참기름 약간, 굴소스 2스푼, 간장 1.5스푼, 맛술 2스푼, 설탕 0.5스푼, 올리고당 1스푼, 다진마늘 1스푼, 굴소스 1스푼, 맛술 1스푼, 계란(흰자만) 1개, 전분가루 1.5스푼, 생강가루 0.3스푼",
+      recipe: "1. 돼지고기 등심 핏물을 제거하고 굴소스, 맛술, 생강가루, 전분가루, 계란(흰자만)을 넣어 밑간을 해서 10-15분간 재워둡니다.<br>2. 피망, 파프리카는 길게 썰어주고, 양파, 표고버섯은 채썰고, 느타리버섯은 가닥가닥 떼어줍니다.<br>3. 그릇에 굴소스, 간장, 설탕, 올리고당, 맛술, 다진마늘을 넣고 섞어 양념을 만들어줍니다.<br>4. 꽃빵은 5분 정도 쪄줍니다.<br>5. 꽃빵을 찌는 동안, 팬에 식용유를 두르고 밑간한 돼지고기를 달달 볶아줍니다.<br>6. 볶아둔 돼지고기는 다른 그릇에 옮겨두고, 팬에 고추기름3, 다진마늘 1.5를 넣고 볶아주다 마늘향이 올라오면 대파를 넣고 함께 볶아줍니다.<br>7. 파향이 올라오면 양파, 느타리버섯, 표고버섯을 넣고 볶아줍니다.<br>8. 양파가 투명해지면 파프리카, 피망을 넣고 한번 섞어, 만들어 놓은 양념과 볶아둔 돼지고기도 넣고 센불에서 빠르게 다같이 볶아냅니다.<br>9. 마지막으로 참기름 0.5를 넣어 마무리하고 꽃빵과 함께 먹으면 완성!",
+      link: "https://www.10000recipe.com/recipe/6884814"
+    },
+    // 나머지 레시피들도 같은 형식으로 추가
+  };
+
+    recipeGrid.addEventListener('click', (e) => {
+      const item = e.target.closest('.grid-item');
+      if (item) {
+        const title = item.querySelector('.title').textContent;
+        const recipeInfo = recipeDetails[title] || {};
+
+        modalContent.innerHTML = `
+        <h2>${title}</h2>
+        <p style="font-size: 15px; color: #a68d79; font-weight: 400; margin-top: -15px;">
+        ${recipeInfo.description}
+        </p>
+        <img src="${recipeInfo.image}" alt="${title}" style="width:100%;  margin-bottom: 10px;">
+        <p>📝 <b>재료:</b> ${recipeInfo.ingredients}</p>
+        <p>🍳 <b>레시피:</b><br> ${recipeInfo.recipe}</p>
+        <a href="${recipeInfo.link}" target="_blank" style="display: inline-block; color: #f15a24; margin-top: 10px; font-weight: 500;">
+          📖 추가 레시피 보러가기
+        </a>
+      `;
+      openModal(); // **openModal()을 호출하도록 변경**
+
+      function openModal() {
+        document.body.classList.add("modal-open"); // 배경 스크롤 방지
+        modal.classList.add("open");
+        modalOverlay.classList.add("show");
+    }
+
+      modal.classList.add("open");
+      modalOverlay.classList.add("show");
+    }
+  });
+
+    function closeModal() {
+      document.body.classList.remove("modal-open"); // 배경 스크롤 해제
+      modal.classList.remove('open');
+      modalOverlay.classList.remove('show');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>일식 레시피북!</title>
+  <style>
+    @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
+
+    * {
+      font-family: Pretendard;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #fff6ee;
+    }
+
+    /* 🔸 네비게이션 헤더 */
+    .main-header {
+      position: fixed;
+      background-color: #fff0e3;
+      top: 0px; /* marquee 높이만큼 내리기 */
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px;
+      border-bottom: 2px solid #f15a24;
+      z-index: 900;
+  }
+  
+  body {
+    padding-top: 40px; /* 네비게이션 높이만큼 추가 */
+  }
+
+  .roulette-btn, .about-btn {
+      font-size: 1.05em;
+      font-weight: 600;
+      color: #f15a24;
+      text-decoration: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding-left: 8px;
+      padding-right: 8px;
+      padding-top: 2px;
+  }
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+      position: relative;
+      width: 50%;
+      margin: 30px auto;
+      border: 2px solid #f15a24;
+      border-radius: 30px;
+      padding: 5px 15px;
+      background-color: white;
+    }
+
+    .search-bar input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      padding: 10px;
+    }
+
+    .search-icon {
+      position: absolute;
+      right: 15px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .grid-container {
+      max-width: 1000px; /* 그리드의 최대 너비 설정 */
+      height: 650px; /* 전체 높이 설정 */
+      margin: 0 auto; /* 중앙 정렬 */
+      padding: 0px 20px; /* 위와 양쪽에 여백 추가 */
+  }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px; /*아이템 사이의 간격*/
+      
+    }
+
+    .grid-item {
+      /*background-color: #4a4a4a;*/
+      overflow: hidden;
+      
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .grid-item:hover {
+      transform: scale(1.05);
+    }
+
+    .grid-item img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .grid-item .title {
+      color: #f15a24;
+      padding: 0;
+      margin-top: 10px;
+      text-align: left;
+      font-weight: 400;
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 33%;
+      height: 100%;
+      background: #fff6ee;
+      box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+      overflow-y: auto;
+      transition: right 0.3s ease;
+      z-index: 1000;
+    }
+
+    .modal.open {
+      right: 0;
+    }
+
+    .modal-header {
+      padding-left: 20px;
+      padding-top: 15px;
+      padding-bottom: 15px;
+      font-size: 1.1em;
+      font-weight: 600;
+      background: #fff0e3;
+      border-bottom: 1.5px solid #f15a24; /* 주황색 밑줄 추가 */
+      color: #f15a24;
+    }
+    
+    /* 모달이 열릴 때 배경 스크롤 방지 */
+    body.modal-open {
+    overflow: hidden;
+    }
+
+    .modal-content {
+      padding: 20px;
+      color: #f15a24;
+      font-size: 16px; /* 글자 크기 */
+      line-height: 1.6; /* 행간 (가독성 증가) */
+      text-align: left; /* 텍스트 정렬 */
+
+    }
+
+    .modal-content h2 {
+      font-size: 1.2em; /* 글자 크기 */
+      font-weight: 500; /* 글자 굵기 */
+      text-align: left; /* 중앙 정렬 */
+      color: #f15a24; /* 주황색 */
+      margin-bottom: 15px; /* 아래 여백 추가 */
+    }
+    
+
+    .modal-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 1.5em;
+      cursor: pointer;
+      color: #f15a24;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      display: none;
+    }
+
+    .overlay.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+    <!-- 네비게이션 헤더 -->
+<header class="main-header">
+  <a href="index.html" class="roulette-btn">메인으로ㅤMAIN</a>
+</header>
+
+  <div class="search-bar">
+    <input
+      type="text"
+      id="ingredient-search"
+      placeholder="냉장고에 있는 재료를 검색해 필터링 해보세요!🥕🥔🧄🥩🥬"
+    />
+    <span class="search-icon" onclick="filterRecipes()">🔍</span>
+  </div>
+
+<div class="grid-container">
+  <div class="grid" id="recipeGrid">
+    <div class="grid-item">
+      <img src="Jfood_1.jpg" alt="규동">
+      <div class="title">규동</div>
+    </div>
+    <div class="grid-item">
+      <img src="Jfood_2.jpg" alt="가츠동">
+      <div class="title">가츠동</div>
+    </div>
+    <div class="grid-item">
+      <img src="Jfood_3.jpg" alt="오야꼬동">
+      <div class="title">오야꼬동</div>
+    </div>
+    <div class="grid-item">
+      <img src="Jfood_4.png" alt="카이센동">
+      <div class="title">카이센동</div>
+    </div>
+    <div class="grid-item">
+      <img src="Jfood_5.jpg" alt="일식카레">
+      <div class="title">일식카레</div>
+    </div>
+    <div class="grid-item">
+      <img src="Jfood_6.jpg" alt="돈코츠라멘">
+      <div class="title">돈코츠라멘</div>
+    </div>
+    <div class="grid-item">
+      <img src="Jfood_7.jpg" alt="오꼬노미야끼">
+      <div class="title">오꼬노미야끼</div>
+    </div>
+    <div class="grid-item">
+      <img src="Jfood_8.jpg" alt="마제소바">
+      <div class="title">마제소바</div>
+    </div>
+    <div class="grid-item">
+      <img src="Jfood_9.jpg" alt="연어초밥">
+      <div class="title">연어초밥</div>
+    </div>
+    <div class="grid-item">
+      <img src="Jfood_10.jpg" alt="우동">
+      <div class="title">우동</div>
+    </div>
+    <div class="grid-item">
+      <img src="Jfood_11.jpg" alt="오니기리">
+      <div class="title">오니기리</div>
+    </div>
+    <div class="grid-item">
+      <img src="Jfood_12.jpg" alt="미소된장국">
+      <div class="title">미소된장국</div>
+    </div>
+
+  </div>
+</div>
+
+  <div class="overlay" id="modalOverlay" onclick="closeModal()"></div>
+  <div class="modal" id="recipeModal">
+    <div class="modal-header">
+      오늘의 일식 요리 레시피는?
+      <span class="modal-close" onclick="closeModal()">&times;</span>
+    </div>
+    <div class="modal-content" id="modalContent">
+      <!-- Recipe details go here -->
+    </div>
+  </div>
+
+  <script>
+    const recipeGrid = document.getElementById('recipeGrid');
+    const modal = document.getElementById('recipeModal');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalContent = document.getElementById('modalContent');
+
+    // 1️⃣ 레시피 데이터를 기반으로 .grid-item 요소에 data-ingredients 속성을 추가
+document.addEventListener("DOMContentLoaded", () => {
+  const recipes = document.querySelectorAll(".grid-item");
+  
+  recipes.forEach((recipe) => {
+    const title = recipe.querySelector(".title").textContent.trim();
+    if (recipeDetails[title]) {
+      recipe.dataset.ingredients = recipeDetails[title].ingredients.toLowerCase(); // data-ingredients 속성 자동 추가
+    }
+  });
+});
+
+// 2️⃣ 검색 기능 개선 (recipeDetails 기반 검색)
+function filterRecipes() {
+  const input = document.getElementById("ingredient-search").value.toLowerCase();
+  const recipes = document.querySelectorAll(".grid-item");
+
+  recipes.forEach((recipe) => {
+    const ingredients = recipe.dataset.ingredients || ""; // undefined 방지
+    if (ingredients.includes(input)) {
+      recipe.style.display = "block";
+    } else {
+      recipe.style.display = "none";
+    }
+  });
+}
+
+// 3️⃣ 엔터키 입력 시 검색 실행
+document.getElementById("ingredient-search").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    filterRecipes();
+  }
+});
+
+
+  const recipeDetails = {
+    "규동": {
+      description: "남은 고기로 간단하게!",
+      image: "Jfood_1.jpg",
+      ingredients: "<1인분 기준><br>불고기용 소고기 200g, 양파 1/4개, 쪽파 약간, 계란 노른자 1알, 후추 약간, 식용유 약간, 밥  1공기, 간장 2스푼, 쯔유 2스푼, 맛술 2스푼, 설탕 1스푼, 물 180-200ml",
+      recipe: "1. 소고기는 키친타월로 핏물을 제거해 먹기 좋게 썰어줍니다.<br>2. 양파는 너무 얇지 않게 썰어주고 쪽파도 썰어줍니다.<br>3. 분량의 양념들을 섞어줍니다.<br>4. 팬에 식용유를 살짝 두르고 소고기를 넣고 후추를 뿌려 구워줍니다.<br>5. 고기가 익으면 양파도 넣고 같이 볶아줍니다.<br>6. 만들어둔 양념을 붓고 센 불에 끓여주다가 끓어오르면 중약불로 줄여서 국물이 자박해질 정도로 졸여줍니다.<br>7. 그릇에 밥을 담고 고기를 올려줍니다.<br>8. 계란 노른자를 올리고 쪽파를 뿌려주면 완성!",
+      link: "https://www.10000recipe.com/recipe/6970784"
+    },
+    "가츠동": {
+      description: "달달하고 부드러운 소스와 돈까스의 조합!",
+      image: "Jfood_2.jpg",
+      ingredients: "<1인분 기준><br>밥 1공기, 돈까스 1장, 양파 1/2개, 쪽파 약간, 달걀 2개, 간장 3큰술, 맛술 3큰술, 설탕 2큰술, 물 9큰술",
+      recipe: "1. 양파와 쪽파를 적당한 두께로 채썰어 준비합니다.<br>2. 볼에 달걀 두 알을 깨뜨려 넣고 대충 저어 풀어줍니다.<br>3. 간장, 맛술, 설탕, 물을 섞어 소스를 만듭니다.<br>4. 돈까스는 바삭하게 튀겨 먹기 좋게 잘라줍니다.<br>5. 팬에 소스를 붓고 양파를 넣은 다음 센 불로 불을 켭니다.<br>6. 그 위에 썰어 둔 돈까스를 올려줍니다.<br>7. 소스가 끓어오르면 계란물을 붓고, 쪽파를 올린 뒤 계란이 살짝 익으면 불을 꺼줍니다. 그대로 밥 위에 얹어주면 가츠동 완성!",
+      link: "https://www.10000recipe.com/recipe/6837737"
+    },
+    "오야꼬동": {
+      description: "닭 땡길 때 치킨 대신 이건 어때요?",
+      image: "Jfood_3.jpg",
+      ingredients: "<1인분 기준><br>닭가슴살(혹은 닭다리살) 1조각, 계란 2개, 양파 1/2개, 파 약간, 쯔유 2T 정도, 물 6T, 설탕 약간, 소금 약간, 후추 약간",
+      recipe: "1. 양파 반 개를 채썰어 놓고 파도 어슷썰어 준비합니다.<br>2. 닭은 칼집을 넣고 먹기 좋은 크기로 잘라 소금, 후추도 밑간해줍니다.<br>3. 쯔유, 물을 섞고 설탕을 넣어 육수를 만들어줍니다.<br>4. 팬에 섞어놓은 육수를 넣고 바글바글 끓기 시작하면 고기를 넣고 중불에 반쯤 익혀줍니다.<br>5. 고기가 반쯤 익어 하얗게 변하면 양파를 넣고 2분 정도 끓여줍니다.<br>6. 고기가 익고 양파가 부드러워지면 썰어둔 파를 넣은 뒤 살짝 풀어둔 계란을 반쯤 넣어줍니다. 계란이 반쯤 익으면 나머지 계란도 마저 둘러준 뒤 바로 불을 끄고 뚜껑 덮어 10-20초간 반숙 정도로 익혀줍니다.<br>7. 밥을 담아 그 위에 완성된 닭과 계란을 올려주고 남은 국물을 부어주면 완성!",
+      link: "https://www.10000recipe.com/recipe/6829108"
+    },
+    "카이센동": {
+      description: "좋아하는 해산물 가득 넣어 자유롭게!",
+      image: "Jfood_4.png",
+      ingredients: "<1인분 기준><br>초대리(식초 1T, 소금 0.5T, 설탕 1T), 밥 200g, 회간장(간장 2T, 미림 1T, 올리고당 1/2T), 연어사시미, 단새우회, 우니, 와사비 조금, 김가루나 후리카케, 기타 원하는 해산물들!",
+      recipe: "1. 밥을 고슬고슬하게 지어줍니다.<br>2. 분량의 식초, 소금, 설탕을 섞어 초대리를 만들어 밥과 섞어줍니다.<br>3. 연어회와 단새우회를 듬뿍 얹어줍니다! 원하는 다른 해산물이나 회로 대체하거나 추가해도 좋아요! 아귀간(안키모)이나 연어알을 추천해요!<br>4. 맨 위에 우니를 얹고, 취향에 맞게 와사비, 김가루나 후리카케를 올려줍니다.<br>5. 마지막으로 분량의 간장, 미림, 올리고당을 섞은 회간장을 곁들여 먹으면 완성! 일식 계란말이나 아보카도를 곁들여 먹어도 좋아요!",
+      link: "https://m.blog.naver.com/jysjysyessle/223165645575"
+    },
+    "일식카레": {
+      description: "야채를 갈아 넣어 보이지 않는 일식 카레!",
+      image: "Jfood_5.jpg",
+      ingredients: "<1인분 기준><br>양파 1/2개, 다진마늘 1큰술, 우유 200ml, 베이컨 2장, 오뚜기 카레 매운맛 2큰술, 물 약간, 파슬리나 통깨(생략가능)",
+      recipe: "1. 양파 반쪽은 잘게 다져주고 베이컨은 먹기 좋은 크기로 썰어줍니다.<br>2. 달궈진 팬에 기름을 살짝 두르고 다진마늘, 양파, 베이컨을 넣고 충분히 볶아줍니다. 재료가 보이지 않을 정도로 충분히 볶아줘야 맛있어요!<br>3. 볶은 재료에 우유를 부어주고 살짝 끓어오를 때 카레가루를 넣어 저어줍니다. 이때 살짝 걸쭉해지는데 물을 넣어 농도를 맞춰주시면 됩니다.<br>4. 기호에 따라 밥 위에 카레를 부어 파슬리나 통깨를 뿌려주면 완성! 베이컨 대신 소세지를 구워서 곁들여 먹어도 좋아요!",
+      link: "https://www.10000recipe.com/recipe/6911229"
+    },
+    "돈코츠라멘": {
+      description: "자취생도 라면으로 쉽게 만드는 돈코츠라멘!",
+      image: "Jfood_6.jpg",
+      ingredients: "<1인분 기준><br>사리곰탕라면 1개, 삼겹살 2/3줄, 채 썬 양파 1개, 물 3종이컵, 식용유 약간, 진간장 2스푼, 올리고당 1스푼, 맛술 1스푼, 후추 약간, 삶은 달걀 1/2개, 숙주 1줌, 쪽파 약간",
+      recipe: "1. 볼에 간장, 올리고당, 맛술, 후추를 넣고 양념을 만들어줍니다.<br>2. 삼겹살을 구우면서 양념을 넣고 졸입니다.<br>3. 팬에 식용유를 약간 두르고 채 썬 양파를 태우듯이 볶아줍니다.<br>4. 물을 붓고 라면스프와 면을 넣어줍니다.<br>5. 숙주, 삶은 달걀, 쪽파와 양념에 졸인 삼겹살을 올려주면 완성!",
+      link: "https://www.10000recipe.com/recipe/6883707"
+    },
+    "오꼬노미야끼": {
+      description: "양배추 처리할 때 간단히 부쳐먹기!",
+      image: "Jfood_7.jpg",
+      ingredients: "<3인분 기준><br>부침가루 250ml, 물 180ml, 맛술 1큰술, 오징어 1/2마리(냉동해물로 대체해도 좋아요!), 마요네즈 약간, 데리야끼소스 적당량, 계란 1개, 양배추 2컵, 베이컨 3장(생략가능), 가쓰오부시 약간(생략가능), 쪽파 약간",
+      recipe: "1. 양배추는 채썰어 준비합니다.<br>2. 부침가루에 물은 180ml정도 넣고 계란, 양배추, 맛술, 냉동해물, 베이컨 등을 넣어 반죽합니다. 약간 걸죽한 정도로 해주세요!<br>3. 달궈진 팬에 기름을 넉넉히 두르고 앞뒤 노릇하게 구워줍니다.<br>4. 잘 익은 오꼬노미야끼 위에 데리야끼 소스, 마요네즈를 뿌리고 가쓰오부시와 쪽파를 잘게 썰어 올려주면 완성!",
+      link: "https://www.10000recipe.com/recipe/6865655"
+    },
+    "마제소바": {
+      description: "생각보다 만들기 쉽답니다!",
+      image: "Jfood_8.jpg",
+      ingredients: "<2인분 기준><br>우동면 2인분, 대파 1/2대, 부추 1/2줌, 김가루 약간, 계란노른자 2개, 돼지고기다짐육 300g, 다진마늘 1큰술, 간장 총 2큰술, 멸치액젓 1큰술, 올리고당 1큰술, 물 2큰술, 맛술 2큰술, 매실액 1큰술, 설탕 2큰술, 굴소스 1큰술, 고추기름 2큰술(생략가능), 소금 약간, 후추 약간",
+      recipe: "1. 팬에 식용유를 두르고 다진마늘 1큰술, 돼지고기 다짐육을 넣고 볶아줍니다.<br>2. 설탕, 매실액, 맛술을 넣고 어느 정도 볶다가 간장 1큰술, 굴소스 1큰술을 넣어줍니다.<br>3. 고추기름 2큰술도 넣고, 물과 소금 후추를 입맛에 맞게 넣어주고 센불로 졸이듯이 끓여줍니다.<br>4. 우동면은 2분정도 삶아 준비해줍니다.<br>5. 우동면에 대파 송송, 부추 잘게 썰어 올려주고, 쯔유가 있다면 쯔유, 없다면 분량의 간장 1큰술, 멸치액젓 1큰술, 올리고당 1큰술, 물 2큰술을 섞어서 올려줍니다.<br>6. 돼지고기 다짐육과 김가루, 노른자를 올려주면 완성! 취향에 맞게 깨를 뿌려줘도 좋아요!",
+      link: "https://www.10000recipe.com/recipe/6977088"
+    },
+    "연어초밥": {
+      description: "집에서 잔뜩 만들어먹기!",
+      image: "Jfood_9.jpg",
+      ingredients: "<2인분 기준><br>생연어 필렛 200g, 양파 1/2개, 무순 약간, 식초 2큰술, 설탕 1/2큰술, 생와사비 약간, 밥 1.5공기, 마요네즈 3큰술, 꿀 1/2큰술, 레몬즙 1큰술, 다진양파 1큰술, 후추 약간",
+      recipe: "1. 양파는 매우 얇게 썰어서 매운맛을 빼기 위해 물에 담가줍니다.<br>2. 연어초밥 소스는 마요네즈, 꿀, 생와사비 약간, 레몬즙, 다진 양파, 후추를 넣어 만들어줍니다.<br>3. 밥 1.5공기에 식초 2큰술, 설탕 반큰술을 넣고 잘 섞어줍니다.<br>4. 물을 뭍혀가며 밥을 초밥 모양으로 만들어줍니다.<br>5. 밥 위에 생와사비를 약간 얹어주고, 연어는 길게 썰어 준비해줍니다.<br>6. 밥 위에 연어를 올려주고 양파, 무순, 마요네즈 소스를 올려주면 완성!",
+      link: "https://www.10000recipe.com/recipe/6931657"
+    },
+    "우동": {
+      description: "쯔유로 간단한 우동 만들기",
+      image: "Jfood_10.jpg",
+      ingredients: "<2인분 기준><br>우동면 2개, 쯔유 3큰술, 국간장 1큰술, 소금 1/2큰술, 맛술 1큰술, 대파 약간, 쑥갓 약간, 어묵 약간, 유부 약간",
+      recipe: "1. 간단한 레시피를 위해 기존의 육수 재료는 전부 쯔유로 대체합니다. 쯔유와 맛술을 넣고 국간장, 소금을 간을 보면서 넣어주세요!<br>2. 육수에 어묵과 면을 끓여줍니다.<br>3. 유부는 최대한 마지막에 넣고 끓여줍니다.<br>4. 마지막으로 대파, 쑥갓을 올려주면 완성!",
+      link: "https://www.10000recipe.com/recipe/6880682"
+    },
+    "오니기리": {
+      description: "동글동글 귀여운 주먹밥",
+      image: "Jfood_11.jpg",
+      ingredients: "<4개 분량 기준><br>흰쌀밥 400g, 참치통조림 100g, 구운 김 1장, 마요네즈 2큰술, 다진 피클 1큰술, 다진 할라피뇨 1큰술(생략가능), 후추 약간, 후리카케 2큰술",
+      recipe: "1. 참치는 기름을 빼서 준비합니다.<br>2. 피클과 할라피뇨는 곱게 다져줍니다. 구운 김은 가로 3cm, 세로 7-8cm 정도로 잘라 준비합니다.<br>3. 밥은 고슬고슬하게 지어 준비하고, 참치에 마요네즈, 피클, 할라피뇨 후추를 넣고 섞어줍니다.<br>4. 밥을 100g씩 4등분한 후 납작하게 펴서 가운데 참치마요를 넣고 동그랗게 오므려 모양을 잡아줍니다.<br>5. 가운데 김을 붙이고 후리카케를 뿌려주면 완성!",
+      link: "https://www.10000recipe.com/recipe/4508585"
+    },
+    "미소된장국": {
+      description: "한국 된장찌개랑은 또 다른 맛이래요",
+      image: "Jfood_12.jpg",
+      ingredients: "<4인분 기준><br>멸치다시육수 3컵, 두부 1/2모, 다진마늘 1/3T(생략가능), 미소된장 2큰술, 불린 미역 1컵, 대파 1줌",
+      recipe: "1. 멸치와 다시마로 육수를 내줍니다.(그냥 물로 하셔도 됩니다!)<br>2. 육수가 끓으면 미소된장 2큰술을 넣어서 풀어줍니다.<br>3. 미역은 미리 불려 작게 자르고 두부도 약간 작게 깍둑썰기해서 준비해줍니다.<br>4. 된장을 넣은 국이 끓으면 미역과 두부를 넣어서 끓여줍니다.<br>5. 다진마늘을 살짝 넣어주고, 미역이 부드럽게 익고 두부가 떠오르면 대파를 넣어주시면 완성!",
+      link: "https://www.10000recipe.com/recipe/6885921"
+    },
+    // 나머지 레시피들도 같은 형식으로 추가
+  };
+
+    recipeGrid.addEventListener('click', (e) => {
+      const item = e.target.closest('.grid-item');
+      if (item) {
+        const title = item.querySelector('.title').textContent;
+        const recipeInfo = recipeDetails[title] || {};
+
+        modalContent.innerHTML = `
+        <h2>${title}</h2>
+        <p style="font-size: 15px; color: #a68d79; font-weight: 400; margin-top: -15px;">
+        ${recipeInfo.description}
+        </p>
+        <img src="${recipeInfo.image}" alt="${title}" style="width:100%;  margin-bottom: 10px;">
+        <p>📝 <b>재료:</b> ${recipeInfo.ingredients}</p>
+        <p>🍳 <b>레시피:</b><br> ${recipeInfo.recipe}</p>
+        <a href="${recipeInfo.link}" target="_blank" style="display: inline-block; color: #f15a24; margin-top: 10px; font-weight: 500;">
+          📖 추가 레시피 보러가기
+        </a>
+      `;
+      openModal(); // **openModal()을 호출하도록 변경**
+
+      function openModal() {
+        document.body.classList.add("modal-open"); // 배경 스크롤 방지
+        modal.classList.add("open");
+        modalOverlay.classList.add("show");
+    }
+
+      modal.classList.add("open");
+      modalOverlay.classList.add("show");
+    }
+  });
+
+    function closeModal() {
+      document.body.classList.remove("modal-open"); // 배경 스크롤 해제
+      modal.classList.remove('open');
+      modalOverlay.classList.remove('show');
+    }
+  </script>
+</body>
+</html>
